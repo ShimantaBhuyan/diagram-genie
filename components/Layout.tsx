@@ -1,5 +1,6 @@
 import Head from "next/head";
 import { Inter } from "next/font/google";
+import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -7,7 +8,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <>
       <Head>
-        <title>DiagramGenie</title>
+        <title>DiagramGenie🔮</title>
         <meta
           name="description"
           content="Generate software engineering diagrams"
@@ -20,6 +21,14 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       >
         {children}
       </main>
+      <div className="flex justify-center items-center w-full shadow-2xl mt-10 py-4">
+        <h2 className="text-md">
+          Made with ☕ by{" "}
+          <Link href="https://twitter.com/AllDevThings" className="underline">
+            Shimanta
+          </Link>
+        </h2>
+      </div>
     </>
   );
 };

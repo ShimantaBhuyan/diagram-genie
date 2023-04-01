@@ -1,441 +1,40 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { Configuration, OpenAIApi } from "openai";
+import {
+  ERD_CHAT_INPUT,
+  SEQ_CHAT_INPUT,
+  STATE_CHAT_INPUT,
+  ERD_PREFIX,
+  MIDFIX,
+  ERD_POSTFIX,
+  STATE_PREFIX,
+  STATE_POSTFIX,
+  STATE_MIDFIX,
+  OUTPUT,
+  COMMON_ELEMENT_VALUES_CLEANED,
+  TEXT_ELEMENT_VALUES_CLEANED,
+} from "@/constants";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
-const SAMPLE_EXCALIDRAW_ERD = {
-  type: "excalidraw",
-  version: 2,
-  source: "https://excalidraw.com",
-  elements: [
-    {
-      id: "fruits-table",
-      type: "rectangle",
-      x: 100,
-      y: 100,
-      width: 300,
-      height: 150,
-      angle: 0,
-      strokeColor: "#000000",
-      backgroundColor: "transparent",
-      fillStyle: "hachure",
-      strokeWidth: 1,
-      strokeStyle: "solid",
-      roughness: 1,
-      opacity: 100,
-      groupIds: [],
-      roundness: { type: 3 },
-      seed: 1234567890,
-      version: 1,
-      versionNonce: 9876543210,
-      isDeleted: false,
-      boundElements: [],
-      updated: 1680244113080,
-      link: null,
-      locked: false,
-    },
-    {
-      id: "fruits-table-text",
-      type: "text",
-      x: 130,
-      y: 110,
-      width: 240,
-      height: 130,
-      angle: 0,
-      strokeColor: "#000000",
-      backgroundColor: "transparent",
-      fillStyle: "hachure",
-      strokeWidth: 1,
-      strokeStyle: "solid",
-      roughness: 1,
-      opacity: 100,
-      groupIds: [],
-      roundness: null,
-      seed: 2345678901,
-      version: 2,
-      versionNonce: 8765432109,
-      isDeleted: false,
-      boundElements: null,
-      updated: 1680244113081,
-      link: null,
-      locked: false,
-      text: "Fruits\n\nfruitid\nname\ncolorid",
-      fontSize: 20,
-      fontFamily: 1,
-      textAlign: "left",
-      verticalAlign: "top",
-      containerId: null,
-      originalText: "Fruits\n\nfruitid\nname\ncolorid",
-      lineHeight: 1.25,
-    },
-    {
-      id: "color-table",
-      type: "rectangle",
-      x: 500,
-      y: 100,
-      width: 300,
-      height: 150,
-      angle: 0,
-      strokeColor: "#000000",
-      backgroundColor: "transparent",
-      fillStyle: "hachure",
-      strokeWidth: 1,
-      strokeStyle: "solid",
-      roughness: 1,
-      opacity: 100,
-      groupIds: [],
-      roundness: { type: 3 },
-      seed: 3456789012,
-      version: 3,
-      versionNonce: 7654321098,
-      isDeleted: false,
-      boundElements: [],
-      updated: 1680244113082,
-      link: null,
-      locked: false,
-    },
-    {
-      id: "color-table-text",
-      type: "text",
-      x: 530,
-      y: 110,
-      width: 240,
-      height: 130,
-      angle: 0,
-      strokeColor: "#000000",
-      backgroundColor: "transparent",
-      fillStyle: "hachure",
-      strokeWidth: 1,
-      strokeStyle: "solid",
-      roughness: 1,
-      opacity: 100,
-      groupIds: [],
-      roundness: null,
-      seed: 4567890123,
-      version: 4,
-      versionNonce: 6543210987,
-      isDeleted: false,
-      boundElements: null,
-      updated: 1680244113083,
-      link: null,
-      locked: false,
-      text: "Color\n\ncolorid\nname\nhexcode",
-      fontSize: 20,
-      fontFamily: 1,
-      textAlign: "left",
-      verticalAlign: "top",
-      containerId: null,
-      originalText: "Color\n\ncolorid\nname\nhexcode",
-      lineHeight: 1.25,
-    },
-    {
-      id: "relation-arrow",
-      type: "arrow",
-      x: 400,
-      y: 175,
-      width: 100,
-      height: 0,
-      angle: 0,
-      strokeColor: "#000000",
-      backgroundColor: "transparent",
-      fillStyle: "hachure",
-      strokeWidth: 1,
-      strokeStyle: "solid",
-      roughness: 1,
-      opacity: 100,
-      groupIds: [],
-      roundness: { type: 2 },
-      seed: 5678901234,
-      version: 5,
-      versionNonce: 5432109876,
-      isDeleted: false,
-      boundElements: null,
-      updated: 1680244113084,
-      link: null,
-      locked: false,
-      points: [
-        [0, 0],
-        [100, 0],
-      ],
-      lastCommittedPoint: null,
-      startBinding: {
-        elementId: "fruits-table",
-        focus: 1,
-        gap: 12,
-      },
-      endBinding: {
-        elementId: "color-table",
-        focus: 0,
-        gap: 12,
-      },
-      startArrowhead: null,
-      endArrowhead: "arrow",
-    },
-  ],
-
-  appState: {
-    gridSize: null,
-    viewBackgroundColor: "#ffffff",
-  },
-  files: {},
-};
-
-const ERD_CHAT_INPUT = [
-  {
-    id: "cn3PFETIoIrmZqrymyr8_",
-    type: "rectangle",
-    x: 516,
-    y: 236,
-    width: 296,
-    height: 325,
-    angle: 0,
-    strokeColor: "#000000",
-    backgroundColor: "transparent",
-    fillStyle: "hachure",
-    strokeWidth: 1,
-    strokeStyle: "solid",
-    roughness: 1,
-    opacity: 100,
-    groupIds: [],
-    roundness: { type: 3 },
-    seed: 1817540382,
-    version: 56,
-    versionNonce: 822145438,
-    isDeleted: false,
-    boundElements: [{ id: "xcakFMYh1tAkjAM5He6xz", type: "arrow" }],
-    updated: 1680244113080,
-    link: null,
-    locked: false,
-  },
-  {
-    id: "9O1jB0X8ISSEFBUZJiMaP",
-    type: "text",
-    x: 538,
-    y: 209,
-    width: 89.67990112304688,
-    height: 25,
-    angle: 0,
-    strokeColor: "#000000",
-    backgroundColor: "transparent",
-    fillStyle: "hachure",
-    strokeWidth: 1,
-    strokeStyle: "solid",
-    roughness: 1,
-    opacity: 100,
-    groupIds: [],
-    roundness: null,
-    seed: 77824386,
-    version: 16,
-    versionNonce: 218336898,
-    isDeleted: false,
-    boundElements: null,
-    updated: 1680244019598,
-    link: null,
-    locked: false,
-    text: "Customer",
-    fontSize: 20,
-    fontFamily: 1,
-    textAlign: "left",
-    verticalAlign: "top",
-    containerId: null,
-    originalText: "Customer",
-    lineHeight: 1.25,
-  },
-  {
-    id: "EaZsek27qFODgavU1cFmO",
-    type: "text",
-    x: 555,
-    y: 286,
-    width: 105.43988037109375,
-    height: 125,
-    angle: 0,
-    strokeColor: "#000000",
-    backgroundColor: "transparent",
-    fillStyle: "hachure",
-    strokeWidth: 1,
-    strokeStyle: "solid",
-    roughness: 1,
-    opacity: 100,
-    groupIds: [],
-    roundness: null,
-    seed: 788795102,
-    version: 32,
-    versionNonce: 1468836418,
-    isDeleted: false,
-    boundElements: null,
-    updated: 1680244032435,
-    link: null,
-    locked: false,
-    text: "Customerid\n\nName\n\nOrderid",
-    fontSize: 20,
-    fontFamily: 1,
-    textAlign: "left",
-    verticalAlign: "top",
-    containerId: null,
-    originalText: "Customerid\n\nName\n\nOrderid",
-    lineHeight: 1.25,
-  },
-  {
-    id: "1mGCS35btePWpba6qNXvQ",
-    type: "rectangle",
-    x: 1018,
-    y: 241,
-    width: 271,
-    height: 313,
-    angle: 0,
-    strokeColor: "#000000",
-    backgroundColor: "transparent",
-    fillStyle: "hachure",
-    strokeWidth: 1,
-    strokeStyle: "solid",
-    roughness: 1,
-    opacity: 100,
-    groupIds: [],
-    roundness: { type: 3 },
-    seed: 583143938,
-    version: 80,
-    versionNonce: 1567428062,
-    isDeleted: false,
-    boundElements: [{ id: "xcakFMYh1tAkjAM5He6xz", type: "arrow" }],
-    updated: 1680244113080,
-    link: null,
-    locked: false,
-  },
-  {
-    id: "nNjrdcCXZZjpFW2iQP8-S",
-    type: "text",
-    x: 1036,
-    y: 212,
-    width: 54.039947509765625,
-    height: 25,
-    angle: 0,
-    strokeColor: "#000000",
-    backgroundColor: "transparent",
-    fillStyle: "hachure",
-    strokeWidth: 1,
-    strokeStyle: "solid",
-    roughness: 1,
-    opacity: 100,
-    groupIds: [],
-    roundness: null,
-    seed: 1583354142,
-    version: 6,
-    versionNonce: 1197870914,
-    isDeleted: false,
-    boundElements: null,
-    updated: 1680244044798,
-    link: null,
-    locked: false,
-    text: "Order",
-    fontSize: 20,
-    fontFamily: 1,
-    textAlign: "left",
-    verticalAlign: "top",
-    containerId: null,
-    originalText: "Order",
-    lineHeight: 1.25,
-  },
-  {
-    id: "HalzpM5iTzMS2hd_I-Srs",
-    type: "text",
-    x: 1069,
-    y: 296,
-    width: 104.23989868164062,
-    height: 125,
-    angle: 0,
-    strokeColor: "#000000",
-    backgroundColor: "transparent",
-    fillStyle: "hachure",
-    strokeWidth: 1,
-    strokeStyle: "solid",
-    roughness: 1,
-    opacity: 100,
-    groupIds: [],
-    roundness: null,
-    seed: 1603768862,
-    version: 45,
-    versionNonce: 1444672578,
-    isDeleted: false,
-    boundElements: null,
-    updated: 1680244106060,
-    link: null,
-    locked: false,
-    text: "Orderid\n\nProductid\n\nTotalPrice",
-    fontSize: 20,
-    fontFamily: 1,
-    textAlign: "left",
-    verticalAlign: "top",
-    containerId: null,
-    originalText: "Orderid\n\nProductid\n\nTotalPrice",
-    lineHeight: 1.25,
-  },
-  {
-    id: "xcakFMYh1tAkjAM5He6xz",
-    type: "arrow",
-    x: 824,
-    y: 374,
-    width: 179,
-    height: 4,
-    angle: 0,
-    strokeColor: "#000000",
-    backgroundColor: "transparent",
-    fillStyle: "hachure",
-    strokeWidth: 1,
-    strokeStyle: "solid",
-    roughness: 1,
-    opacity: 100,
-    groupIds: [],
-    roundness: { type: 2 },
-    seed: 1691884546,
-    version: 38,
-    versionNonce: 284622658,
-    isDeleted: false,
-    boundElements: null,
-    updated: 1680244113080,
-    link: null,
-    locked: false,
-    points: [
-      [0, 0],
-      [179, 4],
-    ],
-    lastCommittedPoint: null,
-    startBinding: {
-      elementId: "cn3PFETIoIrmZqrymyr8_",
-      focus: -0.1693256288010243,
-      gap: 12,
-    },
-    endBinding: {
-      elementId: "1mGCS35btePWpba6qNXvQ",
-      focus: 0.10115389329551226,
-      gap: 15,
-    },
-    startArrowhead: null,
-    endArrowhead: "arrow",
-  },
-];
-
-const SEQ_CHAT_INPUT = [];
-const STATE_CHAT_INPUT = [];
-
-const prefix = `You are an expert program that can read and parse a JSON object about a visual drawing application and respond with a JSON object for an entity relationship diagram. These are the types of the elements that can be used: export type Point = [number, number]; type _ExcalidrawElementBase = Readonly<{ id: string; x: number; y: number; strokeColor: string; backgroundColor: string; fillStyle: FillStyle; strokeWidth: number; strokeStyle: StrokeStyle; roundness: null | { type: RoundnessType; value?: number }; roughness: number; opacity: number; width: number; height: number; angle: number; /** Random integer used to seed shape generation so that the roughjs shape doesn't differ across renders. */ seed: number; /** Integer that is sequentially incremented on each change. Used to reconcile elements during collaboration or when saving to server. */ version: number; /** Random integer that is regenerated on each change. Used for deterministic reconciliation of updates during collaboration, in case the versions (see above) are identical. */ versionNonce: number; isDeleted: boolean; /** List of groups the element belongs to. Ordered from deepest to shallowest. */ groupIds: readonly GroupId[]; /** other elements that are bound to this element */ boundElements: | readonly Readonly<{ id: ExcalidrawLinearElement["id"]; type: "arrow" | "text"; }>[] | null; /** epoch (ms) timestamp of last element update */ updated: number; link: string | null; locked: boolean; customData?: Record<string, any>; }>; export type ExcalidrawRectangleElement = _ExcalidrawElementBase & { type: "rectangle"; }; export type ExcalidrawDiamondElement = _ExcalidrawElementBase & { type: "diamond"; }; export type ExcalidrawEllipseElement = _ExcalidrawElementBase & { type: "ellipse"; }; /** * ExcalidrawElement should be JSON serializable and (eventually) contain * no computed data. The list of all ExcalidrawElements should be shareable * between peers and contain no state local to the peer. */ export type ExcalidrawElement = | ExcalidrawGenericElement | ExcalidrawTextElement | ExcalidrawLinearElement | ExcalidrawFreeDrawElement | ExcalidrawImageElement; export type ExcalidrawTextElement = _ExcalidrawElementBase & Readonly<{ type: "text"; fontSize: number; fontFamily: FontFamilyValues; text: string; textAlign: TextAlign; verticalAlign: VerticalAlign; containerId: ExcalidrawGenericElement["id"] | null; originalText: string; /** * Unitless line height (aligned to W3C). To get line height in px, multiply * with font size (using 'getLineHeightInPx' helper). */ lineHeight: number & { _brand: "unitlessLineHeight" }; }>; export type PointBinding = { elementId: ExcalidrawBindableElement["id"]; focus: number; gap: number; }; export type Arrowhead = "arrow" | "bar" | "dot" | "triangle"; export type ExcalidrawLinearElement = _ExcalidrawElementBase & Readonly<{ type: "line" | "arrow"; points: readonly Point[]; lastCommittedPoint: Point | null; startBinding: PointBinding | null; endBinding: PointBinding | null; startArrowhead: Arrowhead | null; endArrowhead: Arrowhead | null; }>; export type ExcalidrawArrowElement = ExcalidrawLinearElement & Readonly<{ type: "arrow"; }>; export type ExcalidrawFreeDrawElement = _ExcalidrawElementBase & Readonly<{ type: "freedraw"; points: readonly Point[]; pressures: readonly number[]; simulatePressure: boolean; lastCommittedPoint: Point | null; }>; `;
-
-const midfix =
-  "Imagine you are in an 1000px by 1000px visual canvas. This is a sample JSON object of a diagram drawn in the application and you need to understand it thoroughly:";
-
-const postfix =
-  "Now that you have understood how to draw a figure for the application, I want you to generate JSON to draw an entity relationship diagram of a database. Generate random string uuid for the id fields, random long integer for the seed, and versionNonce fields, and a random but incremental numeric timestamp for the updated field. Remember to destructure the command and break it down into the smallest components and then compose them to generate the final output. Also remember to include all the required fields defined in the types above, for the appropriate type of figure object to be used in the diagram. Respond with only the JSON/JavaScript object and no other text.";
-
 const getDiagramInput = (diagramType: string) => {
   switch (diagramType) {
     case "ERD":
-      return ERD_CHAT_INPUT;
+      return `${ERD_PREFIX}\n${MIDFIX}${JSON.stringify(
+        ERD_CHAT_INPUT
+      )}\n${ERD_POSTFIX}`;
     // case "SEQ": return SEQ_CHAT_INPUT;
-    // case "STATE": return STATE_CHAT_INPUT;
+    case "STATE":
+      return `${STATE_PREFIX}\n${MIDFIX}${JSON.stringify(
+        STATE_CHAT_INPUT
+      )}\n${STATE_POSTFIX}`;
     default:
-      return ERD_CHAT_INPUT;
+      return `${ERD_PREFIX}\n${MIDFIX}${JSON.stringify(
+        ERD_CHAT_INPUT
+      )}\n${ERD_POSTFIX}`;
   }
 };
 
@@ -445,15 +44,14 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     // diagramType = "ERD", "SEQ", "STATE"
     const diagramType = body.diagramType;
     const input = body.input;
+    // console.log({ diagramType, input });
     try {
       const response = await openai.createChatCompletion({
         model: "gpt-4",
         messages: [
           {
             role: "system",
-            content: `${prefix}\n${midfix}${JSON.stringify(
-              getDiagramInput(diagramType ?? "ERD")
-            )}\n${postfix}`,
+            content: getDiagramInput(diagramType),
           },
           {
             role: "user",
@@ -461,7 +59,67 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
           },
         ],
       });
-      res.status(200).json(response);
+      // @ts-ignore
+      console.log("RESPONSE: \n", response.data.choices[0].message.content);
+
+      //   const elems = OUTPUT.elements.map((elem) => {
+      //     if (elem.type == "text") {
+      //       return {
+      //         ...elem,
+      //         ...COMMON_ELEMENT_VALUES_CLEANED,
+      //         ...TEXT_ELEMENT_VALUES_CLEANED,
+      //       };
+      //     }
+      //     if (elem.type == "arrow") {
+      //       const arrowElement = {
+      //         ...elem,
+      //         ...COMMON_ELEMENT_VALUES_CLEANED,
+      //         ...{ startArrowhead: null, endArrowhead: "arrow" },
+      //         // startBinding: {
+      //         //     elementId: elem.startBinding?.elementId,
+      //         //     focus: 1,
+      //         //     gap: 1
+      //         // },
+      //         // endBinding: {
+      //         //     elementId: elem.endBinding?.elementId,
+      //         //     focus: 1,
+      //         //     gap: 1
+      //         // }
+      //       };
+      //       console.log("ARROW | ", {
+      //         ...elem,
+      //         ...COMMON_ELEMENT_VALUES_CLEANED,
+      //         ...{ startArrowhead: null, endArrowhead: "arrow" },
+      //         boundElements: null,
+      //       });
+      //       return {
+      //         ...elem,
+      //         ...COMMON_ELEMENT_VALUES_CLEANED,
+      //         ...{ startArrowhead: null, endArrowhead: "arrow" },
+      //         boundElements: null,
+      //       };
+      //     }
+      //     return { ...elem, ...COMMON_ELEMENT_VALUES_CLEANED };
+      //   });
+
+      //   console.log({ elems });
+
+      const excalidrawJSON = {
+        type: "excalidraw",
+        version: 2,
+        source: "https://excalidraw.com",
+        // @ts-ignore
+        elements: /* elems  */ response.data.choices[0].message.content,
+        appState: {
+          gridSize: null,
+          viewBackgroundColor: "#ffffff",
+        },
+        files: {},
+      };
+      res.status(200).json(excalidrawJSON);
+
+      //   console.log(getDiagramInput(diagramType));
+      //   res.status(200).json(getDiagramInput(diagramType));
     } catch (err) {
       res.status(400).json(`ERROR IN RESPONSE: ${err}`);
     }
