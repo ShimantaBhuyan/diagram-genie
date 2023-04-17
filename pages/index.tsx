@@ -1,129 +1,112 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
-// import { Diagram } from "@/components/Diagram";
-
-import dynamic from "next/dynamic";
-
-const DynamicDiagram = dynamic(() => import("../components/Diagram"), {
-  loading: () => <p>Loading Diagram...</p>,
-  ssr: false,
-});
+import mermaid from "mermaid";
+import MermaidViewer from "@/components/Mermaid";
+import { CopyToClipboard } from "react-copy-to-clipboard";
+import { ClipboardIcon } from "@/components/ClipboardIcon";
+import Link from "next/link";
+import ImageModal from "@/components/ImageModal";
 
 export default function Home() {
-  const [diagram, setDiagram] = useState(null);
-  const [userInput, setUserInput] = useState<string>("");
+  const [userInput, setUserInput] = useState("");
+  const [mermaidInput, setMermaidInput] = useState<string | null>(null);
+  const [mermaidCopied, setMermaidCopied] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [modalImage, setModalImage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [diagramType, setDiagramType] = useState("EMPTY");
 
-  const diagramTypeUpdate = (type: string) => {
-    setDiagramType(type);
-  };
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setUserInput(e.target.value);
-  };
-
-  const generateDiagram = async () => {
+  async function getMermaid(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
     setIsLoading(true);
-    const diagramResponse = await fetch("/api/getDiagram", {
+    const response = await fetch("/api/generateDiagram", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        diagramType,
-        input: userInput,
+        query: userInput,
       }),
     });
-    if (diagramResponse.ok) {
-      const diagramOutput = await diagramResponse.json();
-      console.log({ diagramOutput });
-      // console.log(JSON.parse(diagramOutput.elements));
-      // console.log(JSON.parse(JSON.parse(diagramOutput).elements));
+    if (response.ok) {
+      const data = await response.json();
+      console.log(data.data.split("```")[1].replaceAll("\n", " "));
 
-      // const diagramData = JSON.parse(diagramOutput.elements);
-      const diagramData = JSON.parse(diagramOutput.elements);
-      setDiagram(diagramData);
-    } else {
-      alert(
-        "We went into a very deep rabbit hole but couldn't generate the diagram."
-      );
+      const merData = data.data.split("\n");
+      const merData2 = merData.slice(1, merData.length - 1);
+      console.log({ merData, merData2 });
+      const joined = merData2.join(" ");
+      mermaid.initialize({
+        startOnLoad: true,
+      });
+      const type = mermaid.detectType(joined);
+      console.log({ type });
+      let merDataParsed = "";
+      if (type === "er") {
+        merDataParsed = merData2.join(" ").replaceAll("```", "");
+      } else {
+        merDataParsed = merData2.join("\n").replaceAll("```", "");
+      }
+      console.log("MerDataParsed: ", merDataParsed);
+
+      setMermaidInput(merDataParsed);
     }
     setIsLoading(false);
+  }
+
+  const handleShowModal = (url: string) => {
+    setModalImage(url);
+    setShowModal(true);
   };
 
   return (
-    <div className="flex flex-col justify-center items-center w-[100%] h-[100%] gap-5">
-      <h1 className="text-4xl">DiagramGenie🔮</h1>
-      <h2 className="text-2xl">
-        Talk to create Software Engineering diagrams{" "}
-      </h2>
-      <div>
-        <Image
-          src="/snap_2.png"
-          width={1330}
-          height={700}
-          alt="screenshot of working application"
-          className="rounded-md"
-        />
+    <div className="flex flex-col justify-center items-center w-[100%] h-[100%] gap-10">
+      <div className="flex flex-col justify-center items-center gap-5">
+        <h1 className="text-3xl sm:text-4xl text-center">DiagramGenie🔮</h1>
+        <h2 className="text-xl sm:text-2xl text-center">
+          Talk to create Software Engineering diagrams{" "}
+        </h2>
+        <h2 className="text-sm">
+          Powered by{" "}
+          <Link href="https://chat.openai.com" className="underline">
+            ChatGPT
+          </Link>{" "}
+          and{" "}
+          <Link href="https://mermaid.js.org/" className="underline">
+            MermaidJS
+          </Link>
+        </h2>
+        <h2 className="text-sm text-[#858585]">
+          Some kinds of diagrams like Mindmap and others might not be generated
+          properly. Contributions to the repo are welcome.
+        </h2>
       </div>
-      <div className="flex flex-col gap-5 justify-center items-center w-full">
-        <div className="flex flex-col justify-center items-center w-full gap-5">
-          {/* <label htmlFor="diagramType" className="text-xl">
-            What type of diagram do you want to make?
-          </label> */}
-          <select
-            name="diagramType"
-            id="diagramType"
-            value={diagramType}
-            onChange={(e) => {
-              diagramTypeUpdate(e.target.value);
-              setUserInput("");
-            }}
-            className="border-2 border-slate-600 rounded-md px-4 py-2 text-md w-[50%] cursor-pointer"
-          >
-            <option value="EMPTY">Select type of diagram</option>
-            <option value="ERD">Entity Relationship Diagram</option>
-            <option value="STATE">State Machine Diagram</option>
-            {/* <option value="SEQ">Sequence Diagram</option> */}
-          </select>
-        </div>
-        {diagramType.length > 0 && diagramType !== "EMPTY" ? (
-          <div className="flex flex-col gap-5 justify-center items-center w-full">
-            <label htmlFor="diagramJSON" className="text-xl">
-              Describe your diagram
-            </label>
-            <textarea
-              name="diagramJSON"
-              id="diagramJSON"
-              value={userInput}
-              onChange={handleInputChange}
-              rows={6}
-              cols={30}
-              className="border-2 border-slate-600 rounded-md px-4 py-2 text-md"
-            ></textarea>
-          </div>
-        ) : null}
+      <div className="flex flex-col justify-center items-center w-full h-full gap-5">
+        <textarea
+          value={userInput}
+          placeholder="Example: Generate a class diagram for a hospital management system"
+          onChange={(e) => {
+            if (e.target.value != undefined && e.target.value == "") {
+              setMermaidInput(null);
+            }
+            setUserInput(e.target.value);
+          }}
+          rows={6}
+          cols={30}
+          className="border-2 border-slate-600 rounded-md px-4 py-2 text-md"
+        ></textarea>
+
         <button
           type="button"
-          onClick={generateDiagram}
           className="flex justify-center items-center gap-4 rounded-md px-4 py-2 text-md w-fit disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed bg-white text-blue-600 shadow-[0_20px_50px_rgba(8,_112,_184,_0.7)]"
-          disabled={
-            diagramType.length === 0 ||
-            diagramType === "EMPTY" ||
-            userInput.length === 0
-              ? true
-              : false
-          }
+          onClick={getMermaid}
+          disabled={userInput == undefined || userInput == "" || isLoading}
         >
           {isLoading ? (
             <>
               <div role="status">
                 <svg
                   aria-hidden="true"
-                  className="w-8 h-8 mr-2 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600"
+                  className="w-8 h-8 mr-2 text-gray-200 animate-spin fill-blue-600"
                   viewBox="0 0 100 101"
                   fill="none"
                   xmlns="http://www.w3.org/2000/svg"
@@ -146,10 +129,67 @@ export default function Home() {
           )}
         </button>
       </div>
-      {diagram ? (
-        <div className="w-full h-full flex justify-center items-center rounded-md mt-10">
-          <DynamicDiagram diagramJSON={diagram} />
+      <div className="grid grid-cols-3 gap-5 sm:p-10">
+        <div className="col-span-3 sm:col-span-1 flex flex-col justify-start items-start gap-4 w-full">
+          {mermaidInput ? (
+            <>
+              <div className="flex justify-between w-full items-center">
+                <h1 className="text-lg font-medium underline">
+                  Mermaid Output
+                </h1>
+                <CopyToClipboard
+                  text={mermaidInput}
+                  onCopy={() => setMermaidCopied(true)}
+                >
+                  <button type="button" className="relative group">
+                    <ClipboardIcon copied={mermaidCopied} />
+                    <div
+                      id="tooltip-default"
+                      role="tooltip"
+                      className="absolute z-10 hidden group-hover:flex px-3 py-2 min-w-[200px] text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm dark:bg-gray-700"
+                    >
+                      Click to copy. Then paste in mermaid.live to edit the
+                      diagram
+                    </div>
+                  </button>
+                </CopyToClipboard>
+              </div>
+              {mermaidInput}
+            </>
+          ) : null}
         </div>
+        <div className="col-span-3 sm:col-span-2">
+          {mermaidInput ? <MermaidViewer data={mermaidInput} /> : null}
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-5">
+        <Image
+          src="/newSnap1.png"
+          width={570}
+          height={300}
+          alt="screenshot of working application"
+          className="rounded-md col-span-3 sm:col-span-1 cursor-pointer"
+          onClick={() => handleShowModal("/newSnap1.png")}
+        />
+        <Image
+          src="/newSnap2.png"
+          width={570}
+          height={300}
+          alt="screenshot of working application"
+          className="rounded-md col-span-3 sm:col-span-1 cursor-pointer"
+          onClick={() => handleShowModal("/newSnap2.png")}
+        />
+        <Image
+          src="/newSnap3.png"
+          width={570}
+          height={300}
+          alt="screenshot of working application"
+          className="rounded-md col-span-3 sm:col-span-1 cursor-pointer"
+          onClick={() => handleShowModal("/newSnap3.png")}
+        />
+      </div>
+      {modalImage.length && showModal ? (
+        <ImageModal imgSrc={modalImage} setShowModal={setShowModal} />
       ) : null}
     </div>
   );
