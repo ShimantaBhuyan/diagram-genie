@@ -6,8 +6,6 @@ export interface MermaidViewerProps {
   data: string;
 }
 export default function MermaidViewer(props: MermaidViewerProps) {
-  console.log({ props });
-
   useEffect(() => {
     mermaid.contentLoaded();
   }, [props.data]);

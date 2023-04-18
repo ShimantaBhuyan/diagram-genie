@@ -6,6 +6,7 @@ import { CopyToClipboard } from "react-copy-to-clipboard";
 import { ClipboardIcon } from "@/components/ClipboardIcon";
 import Link from "next/link";
 import ImageModal from "@/components/ImageModal";
+import { DownloadIcon } from "@/components/DownloadIcon";
 
 export default function Home() {
   const [userInput, setUserInput] = useState("");
@@ -29,24 +30,20 @@ export default function Home() {
     });
     if (response.ok) {
       const data = await response.json();
-      console.log(data.data.split("```")[1].replaceAll("\n", " "));
 
       const merData = data.data.split("\n");
       const merData2 = merData.slice(1, merData.length - 1);
-      console.log({ merData, merData2 });
       const joined = merData2.join(" ");
       mermaid.initialize({
         startOnLoad: true,
       });
       const type = mermaid.detectType(joined);
-      console.log({ type });
       let merDataParsed = "";
       if (type === "er") {
         merDataParsed = merData2.join(" ").replaceAll("```", "");
       } else {
         merDataParsed = merData2.join("\n").replaceAll("```", "");
       }
-      console.log("MerDataParsed: ", merDataParsed);
 
       setMermaidInput(merDataParsed);
     }
@@ -56,6 +53,43 @@ export default function Home() {
   const handleShowModal = (url: string) => {
     setModalImage(url);
     setShowModal(true);
+  };
+
+  const downloadSvg = (): void => {
+    const svg: Element | null = document.querySelector(".mermaid svg");
+    // @ts-ignore
+    const svgData: string = new XMLSerializer().serializeToString(svg);
+
+    // Download SVG file
+    const svgBlob: Blob = new Blob([svgData], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+    const svgUrl: string = URL.createObjectURL(svgBlob);
+    const downloadLink: HTMLAnchorElement = document.createElement("a");
+    downloadLink.href = svgUrl;
+    downloadLink.download = "diagram.svg";
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+
+    // // Convert SVG to PNG
+    // const canvas: HTMLCanvasElement = document.createElement("canvas");
+    // const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
+    // // const img: HTMLImageElement = new Image() as HTMLImageElement;
+    // const img: HTMLImageElement = new Image(svg?.clientWidth, svg?.clientHeight);
+    // img.onload = () => {
+    //   canvas.width = img.width;
+    //   canvas.height = img.height;
+    //   ctx.drawImage(img, 0, 0);
+    //   const pngUrl: string = canvas.toDataURL("image/png");
+    //   const downloadLink: HTMLAnchorElement = document.createElement("a");
+    //   downloadLink.href = pngUrl;
+    //   downloadLink.download = "diagram.png";
+    //   document.body.appendChild(downloadLink);
+    //   downloadLink.click();
+    //   document.body.removeChild(downloadLink);
+    // };
+    // img.src = svgUrl;
   };
 
   return (
@@ -158,8 +192,17 @@ export default function Home() {
             </>
           ) : null}
         </div>
-        <div className="col-span-3 sm:col-span-2">
-          {mermaidInput ? <MermaidViewer data={mermaidInput} /> : null}
+        <div className="col-span-3 sm:col-span-2 flex flex-col justify-start items-start gap-4 w-full">
+          {mermaidInput ? (
+            <>
+              <div className="w-full flex justify-end">
+                <button type="button" onClick={downloadSvg}>
+                  <DownloadIcon />
+                </button>
+              </div>
+              <MermaidViewer data={mermaidInput} />
+            </>
+          ) : null}
         </div>
       </div>
       <div className="grid grid-cols-3 gap-5">

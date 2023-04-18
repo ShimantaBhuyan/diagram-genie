@@ -20,8 +20,6 @@ export default async function handler(
     // OpenAI recommends replacing newlines with spaces for best results
     const input = query.replace(/\n/g, " ");
 
-    console.log({ input });
-
     // Generate a one-time embedding for the query itself
     const embeddingResponse = await openai.createEmbedding({
       model: "text-embedding-ada-002",
