@@ -3,6 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next";
 import { Configuration, OpenAIApi } from "openai";
 import { SBClient } from "@/utils/SBClient";
 import GPT3Tokenizer from "gpt3-tokenizer";
+const { GoogleSpreadsheet } = require("google-spreadsheet");
 
 const supabase = SBClient.getInstance();
 
@@ -10,6 +11,41 @@ const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
+
+const saveToSheets = async (data: string) => {
+  const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID);
+
+  try {
+    await doc.useServiceAccountAuth({
+      client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+      private_key: (process.env.GOOGLE_PRIVATE_KEY || "").replace(/\\n/g, "\n"),
+    });
+
+    await doc.getInfo();
+    const sheet = doc.sheetsByIndex[0]; // or use doc.sheetsById[id] or doc.sheetsByTitle[title]
+
+    const dateTime = new Date(Date.now()).toLocaleDateString("en-GB");
+
+    const headers = ["date", "data"];
+    const reqbody = {
+      [headers[0]]: dateTime,
+      [headers[1]]: data,
+    };
+
+    const addSheetResult = await sheet.addRow(reqbody);
+    // return {
+    //   statusCode: 200,
+    //   statusMessage: `Successfully added data`,
+    // };
+    // res.json(responseBody);
+  } catch (error) {
+    console.log({ error });
+    // return {
+    //   statusCode: 500,
+    //   statusMessage: `Couldn't add data: ${error}`,
+    // };
+  }
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -19,6 +55,8 @@ export default async function handler(
     const query = req.body.query;
     // OpenAI recommends replacing newlines with spaces for best results
     const input = query.replace(/\n/g, " ");
+
+    saveToSheets(input);
 
     // Generate a one-time embedding for the query itself
     const embeddingResponse = await openai.createEmbedding({
